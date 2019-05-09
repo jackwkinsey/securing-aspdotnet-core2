@@ -23,7 +23,10 @@ namespace Marvin.IDP
                         new Claim("given_name", "Frank"),
                         new Claim("family_name", "Underwood"),
                         new Claim("address", "123 Maplewood Drive"),
-                        new Claim("role", "FreeUser")
+                        new Claim("role", "FreeUser"),
+                        new Claim("country", "nl"),
+                        new Claim("subscriptionlevel", "FreeUser")
+
                     }
                 },
                 new TestUser
@@ -36,7 +39,9 @@ namespace Marvin.IDP
                         new Claim("given_name", "Claire"),
                         new Claim("family_name", "Underwood"),
                         new Claim("address", "1600 Pennsylvania Ave."),
-                        new Claim("role", "PayingUser")
+                        new Claim("role", "PayingUser"),
+                        new Claim("country", "be"),
+                        new Claim("subscriptionlevel", "PayingUser")
                     }
                 }
             };
@@ -50,7 +55,21 @@ namespace Marvin.IDP
                 new IdentityResources.OpenId(),
                 new IdentityResources.Profile(),
                 new IdentityResources.Address(),
-                new IdentityResource("roles", "Your role(s)", new List<string> { "role" })
+                new IdentityResource(
+                    "roles",
+                    "Your role(s)",
+                    new List<string> { "role" }
+                ),
+                new IdentityResource(
+                    "country",
+                    "The country you're living in",
+                    new List<string> { "country" }
+                ),
+                new IdentityResource(
+                    "subscriptionlevel",
+                    "Your subscription level",
+                    new List<string> { "subscriptionlevel" }
+                )
             };
         }
 
@@ -86,6 +105,8 @@ namespace Marvin.IDP
                         IdentityServerConstants.StandardScopes.Profile,
                         IdentityServerConstants.StandardScopes.Address,
                         "roles",
+                        "country",
+                        "subscriptionlevel",
                         "imagegalleryapi"
                     },
                     ClientSecrets =

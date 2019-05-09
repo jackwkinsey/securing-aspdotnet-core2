@@ -75,6 +75,11 @@ namespace ImageGallery.Client.Controllers
 
                 return View(editImageViewModel);
             }
+            else if (response.StatusCode == HttpStatusCode.Unauthorized ||
+                response.StatusCode == HttpStatusCode.Forbidden)
+            {
+                return RedirectToAction("AccessDenied", "Authorization");
+            }
 
             throw new Exception($"A problem happened while calling the API: {response.ReasonPhrase}");
         }
@@ -107,6 +112,11 @@ namespace ImageGallery.Client.Controllers
             {
                 return RedirectToAction("Index");
             }
+            else if (response.StatusCode == HttpStatusCode.Unauthorized ||
+                response.StatusCode == HttpStatusCode.Forbidden)
+            {
+                return RedirectToAction("AccessDenied", "Authorization");
+            }
 
             throw new Exception($"A problem happened while calling the API: {response.ReasonPhrase}");
         }
@@ -122,11 +132,16 @@ namespace ImageGallery.Client.Controllers
             {
                 return RedirectToAction("Index");
             }
+            else if (response.StatusCode == HttpStatusCode.Unauthorized ||
+                response.StatusCode == HttpStatusCode.Forbidden)
+            {
+                return RedirectToAction("AccessDenied", "Authorization");
+            }
 
             throw new Exception($"A problem happened while calling the API: {response.ReasonPhrase}");
         }
 
-        [Authorize(Roles = "PayingUser")]
+        [Authorize(Policy = "CanAddImage")]
         public IActionResult AddImage()
         {
             return View();
@@ -134,7 +149,7 @@ namespace ImageGallery.Client.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [Authorize(Roles = "PayingUser")]
+        [Authorize(Policy = "CanAddImage")]
         public async Task<IActionResult> AddImage(AddImageViewModel addImageViewModel)
         {
             if (!ModelState.IsValid)
@@ -178,7 +193,7 @@ namespace ImageGallery.Client.Controllers
             throw new Exception($"A problem happened while calling the API: {response.ReasonPhrase}");
         }
 
-        [Authorize(Roles = "PayingUser")]
+        [Authorize(Policy = "CanOrderFrame")]
         public async Task<IActionResult> OrderFrame()
         {
             var discoveryClient = new DiscoveryClient("https://localhost:44366/");
