@@ -12,6 +12,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
 
@@ -32,7 +33,7 @@ namespace ImageGallery.Client.Controllers
             await WriteOutIdentityInformation();
 
             // call the API
-            var httpClient = await _imageGalleryHttpClient.GetClient(); 
+            var httpClient = await _imageGalleryHttpClient.GetClient();
 
             var response = await httpClient.GetAsync("api/images").ConfigureAwait(false);
 
@@ -44,7 +45,12 @@ namespace ImageGallery.Client.Controllers
                     JsonConvert.DeserializeObject<IList<Image>>(imagesAsString).ToList());
 
                 return View(galleryIndexViewModel);
-            }          
+            }
+            else if (response.StatusCode == HttpStatusCode.Unauthorized ||
+                response.StatusCode == HttpStatusCode.Forbidden)
+            {
+                return RedirectToAction("AccessDenied", "Authorization");
+            }
 
             throw new Exception($"A problem happened while calling the API: {response.ReasonPhrase}");
         }
@@ -66,10 +72,10 @@ namespace ImageGallery.Client.Controllers
                     Id = deserializedImage.Id,
                     Title = deserializedImage.Title
                 };
-                
+
                 return View(editImageViewModel);
             }
-           
+
             throw new Exception($"A problem happened while calling the API: {response.ReasonPhrase}");
         }
 
@@ -84,7 +90,7 @@ namespace ImageGallery.Client.Controllers
 
             // create an ImageForUpdate instance
             var imageForUpdate = new ImageForUpdate()
-                { Title = editImageViewModel.Title };
+            { Title = editImageViewModel.Title };
 
             // serialize it
             var serializedImageForUpdate = JsonConvert.SerializeObject(imageForUpdate);
@@ -95,13 +101,13 @@ namespace ImageGallery.Client.Controllers
             var response = await httpClient.PutAsync(
                 $"api/images/{editImageViewModel.Id}",
                 new StringContent(serializedImageForUpdate, System.Text.Encoding.Unicode, "application/json"))
-                .ConfigureAwait(false);                        
+                .ConfigureAwait(false);
 
             if (response.IsSuccessStatusCode)
             {
                 return RedirectToAction("Index");
             }
-          
+
             throw new Exception($"A problem happened while calling the API: {response.ReasonPhrase}");
         }
 
@@ -116,10 +122,11 @@ namespace ImageGallery.Client.Controllers
             {
                 return RedirectToAction("Index");
             }
-       
+
             throw new Exception($"A problem happened while calling the API: {response.ReasonPhrase}");
         }
-        
+
+        [Authorize(Roles = "PayingUser")]
         public IActionResult AddImage()
         {
             return View();
@@ -127,8 +134,9 @@ namespace ImageGallery.Client.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "PayingUser")]
         public async Task<IActionResult> AddImage(AddImageViewModel addImageViewModel)
-        {   
+        {
             if (!ModelState.IsValid)
             {
                 return View();
@@ -136,7 +144,7 @@ namespace ImageGallery.Client.Controllers
 
             // create an ImageForCreation instance
             var imageForCreation = new ImageForCreation()
-                { Title = addImageViewModel.Title };
+            { Title = addImageViewModel.Title };
 
             // take the first (only) file in the Files list
             var imageFile = addImageViewModel.Files.First();
@@ -147,10 +155,10 @@ namespace ImageGallery.Client.Controllers
                 using (var ms = new MemoryStream())
                 {
                     fileStream.CopyTo(ms);
-                    imageForCreation.Bytes = ms.ToArray();                     
+                    imageForCreation.Bytes = ms.ToArray();
                 }
             }
-            
+
             // serialize it
             var serializedImageForCreation = JsonConvert.SerializeObject(imageForCreation);
 
@@ -160,7 +168,7 @@ namespace ImageGallery.Client.Controllers
             var response = await httpClient.PostAsync(
                 $"api/images",
                 new StringContent(serializedImageForCreation, System.Text.Encoding.Unicode, "application/json"))
-                .ConfigureAwait(false); 
+                .ConfigureAwait(false);
 
             if (response.IsSuccessStatusCode)
             {
@@ -197,7 +205,7 @@ namespace ImageGallery.Client.Controllers
             await HttpContext.SignOutAsync("Cookies");
             await HttpContext.SignOutAsync("oidc");
         }
-        
+
         public async Task WriteOutIdentityInformation()
         {
             var identityToken = await HttpContext.GetTokenAsync(OpenIdConnectParameterNames.IdToken);
