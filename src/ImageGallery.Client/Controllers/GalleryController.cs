@@ -168,6 +168,13 @@ namespace ImageGallery.Client.Controllers
 
             throw new Exception($"A problem happened while calling the API: {response.ReasonPhrase}");
         }
+
+        public async Task Logout()
+        {
+            // Clears the local cookie ("Cookies" must match the name from the scheme).
+            await HttpContext.SignOutAsync("Cookies");
+            await HttpContext.SignOutAsync("oidc");
+        }
         
         public async Task WriteOutIdentityInformation()
         {
