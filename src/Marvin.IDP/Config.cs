@@ -62,7 +62,11 @@ namespace Marvin.IDP
                     AllowedGrantTypes = GrantTypes.Hybrid,
                     RedirectUris = new List<string>
                     {
-                        "https://localhost:44374/signin-oidc"
+                        "https://localhost:44369/signin-oidc"
+                    },
+                    PostLogoutRedirectUris = new List<string>
+                    {
+                        "https://localhost:44369/signout-callback-oidc"
                     },
                     AllowedScopes =
                     {
